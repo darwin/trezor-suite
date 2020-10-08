@@ -1,11 +1,16 @@
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { ExtendedMessageDescriptor } from '@suite-types';
-import HelperTooltip from './components/HelperTooltip';
+import ConnectedHelperTooltip from './components/HelperTooltip/Container';
+import HelperTooltip from './components/HelperTooltip/index';
 import messages from '@suite/support/messages';
 
-type FormattedMessageProps = { isNested?: boolean };
-type MsgType = FormattedMessageProps & ExtendedMessageDescriptor;
+type ownProps = {
+    isNested?: boolean;
+    noRedux?: boolean;
+    translationMode?: boolean;
+};
+type MsgType = ownProps & ExtendedMessageDescriptor;
 
 export const isMsgType = (props: MsgType | React.ReactNode): props is MsgType => {
     return typeof props === 'object' && props !== null && (props as MsgType).id !== undefined;
@@ -31,16 +36,36 @@ const Translation = (props: MsgType) => {
     ) {
         return <>{`Unknown translation id: ${props.id}`}</>;
     }
-    // pass undefined to a 'values' prop in case of an empty values object
+
+    const messageComponent = (
+        <FormattedMessage
+            id={props.id}
+            tagName={props.isNested ? undefined : 'span'}
+            defaultMessage={props.defaultMessage || messages[props.id].defaultMessage}
+            // pass undefined to a 'values' prop in case of an empty values object
+            values={Object.keys(values).length === 0 ? undefined : values}
+        />
+    );
+
+    if (props.noRedux) {
+        // Wrap with Tooltip component that is not connected to redux
+        // used by suite-web-landing as it does not use redux
+        return (
+            <HelperTooltip
+                isNested={props.isNested}
+                messageId={props.id}
+                translationMode={props.translationMode ?? false}
+                language="en"
+            >
+                {messageComponent}
+            </HelperTooltip>
+        );
+    }
+
     return (
-        <HelperTooltip isNested={props.isNested} messageId={props.id}>
-            <FormattedMessage
-                id={props.id}
-                tagName={props.isNested ? undefined : 'span'}
-                defaultMessage={props.defaultMessage || messages[props.id].defaultMessage}
-                values={Object.keys(values).length === 0 ? undefined : values}
-            />
-        </HelperTooltip>
+        <ConnectedHelperTooltip isNested={props.isNested} messageId={props.id}>
+            {messageComponent}
+        </ConnectedHelperTooltip>
     );
 };
 

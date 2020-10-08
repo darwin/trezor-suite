@@ -31,10 +31,15 @@ if (!Intl.RelativeTimeFormat) {
 type PrimitiveType = string | number | boolean | Date | null | undefined;
 
 // Add MessageDescriptor type to values entry
+type FormatXMLElementFn = (...args: any[]) => string | object;
 export interface ExtendedMessageDescriptor extends MessageDescriptor {
     id: keyof typeof messages;
     values?: {
-        [key: string]: PrimitiveType | React.ReactElement | ExtendedMessageDescriptor;
+        [key: string]:
+            | PrimitiveType
+            | React.ReactElement
+            | ExtendedMessageDescriptor
+            | FormatXMLElementFn;
     };
 }
 
