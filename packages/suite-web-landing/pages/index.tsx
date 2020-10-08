@@ -134,11 +134,7 @@ const Index = () => {
 
     return (
         <TranslationModeContext.Provider value={translationMode}>
-            <IntlProvider
-                locale="en"
-                messages={enLocale}
-                // defaultRichTextElements={{ lineBreak: <br /> }} // introduced in react-intl 4
-            >
+            <IntlProvider locale="en" messages={enLocale}>
                 <Layout>
                     <Wrapper>
                         <StyledHeroCta>
@@ -147,7 +143,7 @@ const Index = () => {
                                     <Translation
                                         id="TR_SUITE_WEB_LANDING_HEADLINE"
                                         values={{
-                                            em: (...chunks) => <em>{chunks}</em>,
+                                            em: chunks => <em>{chunks}</em>,
                                             lineBreak: <br />,
                                         }}
                                     />
@@ -194,7 +190,7 @@ const Index = () => {
                                 <Translation
                                     id="TR_SUITE_WEB_LANDING_BOTTOM_HEADLINE"
                                     values={{
-                                        em: (...chunks) => <em>{chunks}</em>,
+                                        em: chunks => <em>{chunks}</em>,
                                         lineBreak: <br />,
                                     }}
                                 />

@@ -151,7 +151,7 @@ const Index = ({ children }: Props) => (
                     <Translation
                         id="TR_SUITE_WEB_LANDING_FOOTER_HEADLINE_PARAGRAPH"
                         values={{
-                            a: (...chunks) => <Link href="https://trezor.io/">{chunks}</Link>,
+                            a: chunks => <Link href="https://trezor.io/">{chunks}</Link>,
                         }}
                     />
                 </FooterParagraph>
