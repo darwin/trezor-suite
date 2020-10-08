@@ -122,8 +122,8 @@ const features = [
     },
     {
         id: 3,
-        headline: 'Native altcoin support',
-        text: 'ETH, XRP, ETC and more now supported \ndirectly through the app.',
+        headline: <Translation id="TR_SUITE_WEB_LANDING_FEATURES_3_HEADLINE" />,
+        text: <Translation id="TR_SUITE_WEB_LANDING_FEATURES_3_TEXT" />,
         backgroundSize: '500px auto',
         soon: false,
     },
