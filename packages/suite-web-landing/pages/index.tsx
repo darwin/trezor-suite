@@ -100,7 +100,7 @@ const TranslationModeTrigger = styled.div`
     height: 20px;
     left: 0px;
     bottom: 0px;
-    background: red;
+    /* background: red; */
 `;
 
 const features = [
