@@ -1,33 +1,34 @@
-import { Dropbox } from 'dropbox';
+import { Dropbox, users, DropboxAuth } from 'dropbox';
 import { AbstractMetadataProvider } from '@suite-types/metadata';
 import { getOauthCode, getOauthReceiverUrl } from '@suite-utils/oauth';
 import { METADATA } from '@suite-actions/constants';
 import { getRandomId } from '@suite-utils/random';
 
+type DropboxMeow = Dropbox & { auth: DropboxAuth };
 class DropboxProvider extends AbstractMetadataProvider {
-    client: Dropbox;
-    user: DropboxTypes.users.FullAccount | undefined;
+    client: DropboxMeow;
+    user: users.FullAccount | undefined;
 
     constructor(token?: string) {
         super('dropbox');
 
         const fetch = window.fetch.bind(window);
-        this.client = new Dropbox({ clientId: METADATA.DROPBOX_CLIENT_ID, fetch });
+        this.client = new Dropbox({ clientId: METADATA.DROPBOX_CLIENT_ID, fetch }) as DropboxMeow;
 
         if (token) {
             // token loaded from storage
-            this.client.setRefreshToken(token);
+            this.client.auth.setRefreshToken(token);
         }
     }
 
     async isConnected() {
         // no token -> means not connected
-        if (!this.client.getAccessToken()) {
+        if (!this.client.auth.getAccessToken()) {
             return false;
         }
         // refresh token is present, refresh it and return true
         try {
-            await this.client.refreshAccessToken(['']);
+            await this.client.auth.refreshAccessToken(['']);
             return true;
         } catch (err) {
             return false;
@@ -38,9 +39,11 @@ class DropboxProvider extends AbstractMetadataProvider {
     async connect() {
         const redirectUrl = await getOauthReceiverUrl();
 
+        console.log('redirectUrl', redirectUrl);
+
         if (!redirectUrl) return false;
 
-        const url = this.client.getAuthenticationUrl(
+        const url = this.client.auth.getAuthenticationUrl(
             redirectUrl,
             getRandomId(10),
             'code',
@@ -51,20 +54,30 @@ class DropboxProvider extends AbstractMetadataProvider {
             true,
         );
 
+        console.log('url', url);
+
         try {
             const code = await getOauthCode(url);
 
+            console.log('code', code);
+
             if (!code) return false;
 
-            // @ts-ignore todo: types are broken in the lib, latest version 6.0.1 is broken as well at time of writing this
-            const { accessToken, refreshToken } = await this.client.getAccessTokenFromCode(
-                redirectUrl,
-                code,
-            );
-            this.client.setAccessToken(accessToken);
-            this.client.setRefreshToken(refreshToken);
+            // this.client.auth is instance of DropboxAuth
+            const response = await this.client.auth.getAccessTokenFromCode(redirectUrl, code);
+            // @ts-ignore response looks like this, typescript thinks it is string
+            const { result, status, headers } = response;
+
+            // dropbox lib is broken, on simulated error, it returns status 400 result undefined and throws unhandled rejection inside the lib itself.
+            // but this should probably never happen so why not let it go as OTHER_ERROR("unknown error")
+            if (status !== 200) {
+                return false;
+                // return this.handleProviderError(result);
+            }
+            this.client.auth.setAccessToken(result.access_token);
+            this.client.auth.setRefreshToken(result.refresh_token);
         } catch (err) {
-            // todo:
+            // probably never happens
             return false;
         }
 
@@ -83,6 +96,7 @@ class DropboxProvider extends AbstractMetadataProvider {
 
     async getFileContent(file: string) {
         try {
+            // again, wrong type in dropbox lib.
             const exists = await this.client.filesSearch({
                 path: '',
                 query: `${file}.mtdt`,
@@ -128,19 +142,22 @@ class DropboxProvider extends AbstractMetadataProvider {
     }
 
     async getCredentials() {
-        const token = this.client.getRefreshToken();
+        const token = this.client.auth.getRefreshToken();
+
         if (!token) return this.error('AUTH_ERROR', 'token is missing');
 
         try {
-            const account = await this.client.usersGetCurrentAccount();
+            const response = await this.client.usersGetCurrentAccount();
+            // @ts-ignore ...
+            const { result, status } = response;
 
-            const result = {
+            const credentials = {
                 type: 'dropbox',
                 token,
-                user: account.name.given_name,
+                user: result.name.given_name,
             } as const;
 
-            return this.ok(result);
+            return this.ok(credentials);
         } catch (err) {
             return this.handleProviderError(err);
         }

@@ -239,6 +239,9 @@ export const fetchMetadata = (deviceState: string) => async (
         return;
     }
 
+    // this ensures refreshing token if necessary prior to firing all get requests
+    await provider.getCredentials();
+
     const deviceFileContentP = new Promise((resolve, reject) => {
         if (device?.metadata?.status !== 'enabled') {
             return reject(new Error('metadata not enabled for this device'));
@@ -385,6 +388,7 @@ export const connectProvider = (type: MetadataProviderType) => async (dispatch: 
         provider = createProvider(type);
     }
     const isConnected = await provider.isConnected();
+
     if (provider && !isConnected) {
         const connected = await provider.connect();
         if (!connected) {
@@ -393,6 +397,7 @@ export const connectProvider = (type: MetadataProviderType) => async (dispatch: 
     }
 
     const result = await provider.getCredentials();
+
     if (!result.success) {
         dispatch(handleProviderError(result, ProviderErrorAction.CONNECT));
         return;
@@ -659,6 +664,7 @@ export const init = (force = false) => async (dispatch: Dispatch, getState: GetS
 
         return false;
     }
+
     // if yes, add metadata keys to accounts
     if (getState().metadata.initiating) {
         dispatch(syncMetadataKeys());
