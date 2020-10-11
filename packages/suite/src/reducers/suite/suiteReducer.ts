@@ -29,6 +29,7 @@ interface SuiteSettings {
 
 export interface SuiteState {
     online: boolean;
+    tor: boolean;
     loading: boolean;
     loaded: boolean;
     error?: string;
@@ -42,6 +43,7 @@ export interface SuiteState {
 
 const initialState: SuiteState = {
     online: true,
+    tor: false,
     loading: false,
     loaded: false,
     messages: {},
@@ -132,6 +134,10 @@ const suiteReducer = (state: SuiteState = initialState, action: Action): SuiteSt
 
             case SUITE.ONLINE_STATUS:
                 draft.online = action.payload;
+                break;
+
+            case SUITE.TOR_STATUS:
+                draft.tor = action.payload;
                 break;
 
             case SUITE.LOCK_UI:
