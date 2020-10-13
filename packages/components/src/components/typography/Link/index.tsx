@@ -56,7 +56,17 @@ interface Props {
 }
 
 const Link = ({ icon, iconProps, ...props }: Props) => (
-    <A href={props.href} target={props.target || '_blank'} rel="noreferrer noopener" {...props}>
+    <A
+        href={props.href}
+        target={props.target || '_blank'}
+        rel="noreferrer noopener"
+        {...props}
+        onClick={(e: any) => {
+            // Prevent events from bubbling to the parent element.
+            // E.g. we don't want the checkbox to be checked when  user clicks on link in checkbox label
+            e.stopPropagation();
+        }}
+    >
         {props.children}
         {icon && (
             <IconWrapper>
