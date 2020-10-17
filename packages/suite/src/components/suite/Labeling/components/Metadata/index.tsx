@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import styled from 'styled-components';
 
 import { Button, colors } from '@trezor/components';
@@ -40,9 +40,9 @@ const LabelButton = styled(Button)`
     text-align: left;
 `;
 
-const ActionButton = styled(Button)`
+const ActionButton = styled(Button)<{ isLoading: boolean }>`
     transition: visibility 0.3s;
-    visibility: hidden;
+    visibility: ${props => (props.isLoading ? 'visible' : 'hidden')};
     width: auto;
     margin-left: 14px;
 `;
@@ -215,11 +215,17 @@ const MetadataLabeling = (props: Props) => {
     const l10nLabelling = getLocalizedActions(props.payload.type);
     const dataTestBase = `@metadata/${props.payload.type}/${props.payload.defaultValue}`;
     const actionButtonsDisabled = isDiscoveryRunning || pending;
+    const isSubscribedToSubmitResult = useRef(true);
     let timeout: number | undefined;
 
     useEffect(() => {
-        return () => clearTimeout(timeout);
-    }, [timeout]);
+        setPending(false);
+        setShowSuccess(false);
+        return () => {
+            isSubscribedToSubmitResult.current = false;
+            clearTimeout(timeout);
+        };
+    }, [props.payload.defaultValue, timeout]);
 
     // is everything ready (more or less) to add label?
     const labelingAvailable = !!(
@@ -263,18 +269,22 @@ const MetadataLabeling = (props: Props) => {
     }
 
     const onSubmit = async (value: string | undefined | null) => {
+        isSubscribedToSubmitResult.current = true;
         setPending(true);
         const result = await addMetadata({
             ...props.payload,
             value: value || undefined,
         });
-        setPending(false);
-        if (result) {
-            setShowSuccess(true);
+        if (isSubscribedToSubmitResult.current) {
+            setPending(false);
+
+            if (result) {
+                setShowSuccess(true);
+            }
+            timeout = setTimeout(() => {
+                setShowSuccess(false);
+            }, 5000);
         }
-        timeout = setTimeout(() => {
-            setShowSuccess(false);
-        }, 2000);
     };
 
     const ButtonLikeLabelWithDropdown = useMemo(() => {
@@ -362,7 +372,7 @@ const MetadataLabeling = (props: Props) => {
                 <SuccessButton
                     variant="tertiary"
                     icon="CHECK"
-                    data-test={`${dataTestBase}/renamed-label-button`}
+                    data-test={`${dataTestBase}/success`}
                 >
                     {l10nLabelling.edited}
                 </SuccessButton>
