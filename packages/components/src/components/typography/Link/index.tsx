@@ -47,7 +47,7 @@ interface Props {
     to?: any;
     target?: string;
     size?: ParagraphSize;
-    customOnClick?: (event: React.MouseEvent<any>) => void;
+    onClick?: (event: React.MouseEvent<any>) => void;
     children?: React.ReactNode;
     className?: string;
     variant?: 'default' | 'nostyle';
@@ -60,16 +60,16 @@ const Link = ({ icon, iconProps, ...props }: Props) => (
         href={props.href}
         target={props.target || '_blank'}
         rel="noreferrer noopener"
+        {...props} // make sure {...props} is passed before calling onCLick()
         onClick={(e: React.MouseEvent<any>) => {
-            // if the user passed custom onClick action, run it
-            if (props.customOnClick) {
-                props.customOnClick(e);
+            // if the user passed custom onClick action, run it first
+            if (props.onClick) {
+                props.onClick(e);
             }
             // Prevent events from bubbling to the parent element.
-            // E.g. we don't want the checkbox to be checked when  user clicks on link in checkbox label
+            // E.g. we don't want the checkbox to be checked when user clicks on link in checkbox label
             e.stopPropagation();
         }}
-        {...props}
     >
         {props.children}
         {icon && (
