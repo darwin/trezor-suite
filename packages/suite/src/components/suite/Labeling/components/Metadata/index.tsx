@@ -215,14 +215,14 @@ const MetadataLabeling = (props: Props) => {
     const l10nLabelling = getLocalizedActions(props.payload.type);
     const dataTestBase = `@metadata/${props.payload.type}/${props.payload.defaultValue}`;
     const actionButtonsDisabled = isDiscoveryRunning || pending;
-    const isSubscribedToSubmitResult = useRef(true);
+    const isSubscribedToSubmitResult = useRef(props.payload.defaultValue);
     let timeout: number | undefined;
 
     useEffect(() => {
         setPending(false);
         setShowSuccess(false);
         return () => {
-            isSubscribedToSubmitResult.current = false;
+            isSubscribedToSubmitResult.current = '';
             clearTimeout(timeout);
         };
     }, [props.payload.defaultValue, timeout]);
@@ -269,13 +269,15 @@ const MetadataLabeling = (props: Props) => {
     }
 
     const onSubmit = async (value: string | undefined | null) => {
-        isSubscribedToSubmitResult.current = true;
+        isSubscribedToSubmitResult.current = props.payload.defaultValue;
         setPending(true);
         const result = await addMetadata({
             ...props.payload,
             value: value || undefined,
         });
-        if (isSubscribedToSubmitResult.current) {
+        // props.payload.defaultValue might change during next render, this comparison
+        // ensures that success state does not appear if it is no longer relevant
+        if (isSubscribedToSubmitResult.current === props.payload.defaultValue) {
             setPending(false);
 
             if (result) {
