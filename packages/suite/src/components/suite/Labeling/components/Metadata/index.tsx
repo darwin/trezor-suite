@@ -40,7 +40,7 @@ const LabelButton = styled(Button)`
     text-align: left;
 `;
 
-const ActionButton = styled(Button)<{ isVisible?: boolean }>`
+const ActionButton = styled(Button)<{ isVisible: boolean }>`
     transition: visibility 0.3s;
     visibility: ${props => (props.isVisible ? 'visible' : 'hidden')};
     width: auto;
@@ -295,17 +295,6 @@ const MetadataLabeling = (props: Props) => {
         }
         return ButtonLikeLabel;
     }, [props.payload.value]);
-
-    // metadata is still initiating, on hover, show only disabled button with spinner
-    if (metadata.initiating)
-        return (
-            <LabelContainer>
-                {props.defaultVisibleValue}
-                <ActionButton variant="tertiary" isDisabled isLoading>
-                    <Translation id="TR_LOADING" />
-                </ActionButton>
-            </LabelContainer>
-        );
 
     // should "add label"/"edit label" button be visible
     const showActionButton = labelingPossible && !showSuccess && !editActive;
